@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eclipse Vale Portal | Game, Diagnostics, Tetris</title>
-  <meta name="description" content="Neon portal with game landing page, diagnostics tools, downloadable agent, and Tetris." />
+  <title>Eclipse Portal | Dashboard</title>
+  <meta name="description" content="Premium dashboard portal for game, diagnostics agent, reports, downloads, and Tetris." />
 
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -13,14 +13,18 @@
       theme: {
         extend: {
           colors: {
-            void: "#050612",
-            neonCyan: "#42F8FF",
-            neonPink: "#FF4FD8",
-            neonViolet: "#8B5CFF"
+            ink: "#080A12",
+            panel: "#10131F",
+            panelSoft: "#151A2B",
+            line: "rgba(255,255,255,.10)",
+            accent: "#7C5CFF",
+            cyan: "#3BE7FF",
+            mint: "#57F2B6",
+            rose: "#FF5C9A"
           },
           boxShadow: {
-            neon: "0 0 25px rgba(66,248,255,.45), 0 0 70px rgba(255,79,216,.22)",
-            softGlow: "0 0 45px rgba(139,92,255,.25)"
+            soft: "0 22px 70px rgba(0,0,0,.35)",
+            glow: "0 0 40px rgba(124,92,255,.28)"
           }
         }
       }
@@ -28,363 +32,288 @@
   </script>
 
   <style>
-    :root {
-      --neon-cyan: #42f8ff;
-      --neon-pink: #ff4fd8;
-      --neon-violet: #8b5cff;
-      --border-soft: rgba(255, 255, 255, 0.13);
-    }
-
     * { box-sizing: border-box; }
 
     body {
       min-height: 100vh;
-      overflow-x: hidden;
-      color: white;
+      color: #F8FAFC;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at 15% 10%, rgba(255, 79, 216, .18), transparent 34%),
-        radial-gradient(circle at 85% 15%, rgba(66, 248, 255, .14), transparent 34%),
-        radial-gradient(circle at 50% 85%, rgba(139, 92, 255, .22), transparent 38%),
-        linear-gradient(135deg, #050612 0%, #080a1a 45%, #0c0616 100%);
+        radial-gradient(circle at top left, rgba(124,92,255,.22), transparent 34%),
+        radial-gradient(circle at top right, rgba(59,231,255,.14), transparent 32%),
+        radial-gradient(circle at bottom center, rgba(255,92,154,.14), transparent 40%),
+        linear-gradient(135deg, #080A12 0%, #0B1020 48%, #080A12 100%);
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      z-index: -5;
-      pointer-events: none;
+      z-index: -2;
       background-image:
         linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 58px 58px;
-      mask-image: linear-gradient(to bottom, black 0%, transparent 92%);
-    }
-
-    .aurora {
-      position: fixed;
-      inset: -20%;
-      z-index: -4;
+      background-size: 64px 64px;
+      mask-image: linear-gradient(to bottom, black, transparent 88%);
       pointer-events: none;
-      background: conic-gradient(from 120deg, transparent, rgba(66,248,255,.18), transparent, rgba(255,79,216,.16), transparent, rgba(139,92,255,.2), transparent);
-      filter: blur(85px);
-      animation: auroraFlow 18s ease-in-out infinite alternate;
-    }
-
-    @keyframes auroraFlow {
-      from { transform: rotate(0deg) scale(1); opacity: .55; }
-      to { transform: rotate(18deg) scale(1.12); opacity: .9; }
     }
 
     .glass {
-      background: linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.035));
-      border: 1px solid var(--border-soft);
+      background: linear-gradient(135deg, rgba(255,255,255,.095), rgba(255,255,255,.045));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 22px 70px rgba(0,0,0,.32);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      box-shadow: 0 24px 90px rgba(0,0,0,.38);
     }
 
-    .neon-text {
-      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-violet));
+    .nav-item,
+    .portal-card,
+    .action-button {
+      transition: transform .25s ease, border-color .25s ease, background .25s ease, opacity .25s ease;
+    }
+
+    .nav-item:hover,
+    .portal-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(124,92,255,.48);
+      background: rgba(255,255,255,.075);
+    }
+
+    .active-nav {
+      color: white;
+      border-color: rgba(59,231,255,.48);
+      background: linear-gradient(135deg, rgba(59,231,255,.14), rgba(124,92,255,.12));
+      box-shadow: 0 0 30px rgba(59,231,255,.10);
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #F8FAFC, #3BE7FF, #7C5CFF, #FF5C9A);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
-    .premium-border { position: relative; overflow: hidden; }
-
-    .premium-border::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      z-index: -1;
-      border-radius: inherit;
-      background: linear-gradient(120deg, rgba(66,248,255,.55), rgba(255,79,216,.45), rgba(139,92,255,.5), rgba(66,248,255,.55));
-      background-size: 260% 260%;
-      animation: borderShift 6s linear infinite;
+    .primary-button {
+      background: linear-gradient(135deg, #7C5CFF, #3BE7FF);
+      box-shadow: 0 16px 45px rgba(124,92,255,.30);
     }
 
-    @keyframes borderShift {
-      from { background-position: 0% 50%; }
-      to { background-position: 260% 50%; }
+    .primary-button:hover { transform: translateY(-2px) scale(1.01); }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #57F2B6;
+      box-shadow: 0 0 20px rgba(87,242,182,.8);
     }
 
-    .tab-button.active {
-      color: white;
-      border-color: rgba(66, 248, 255, .55);
-      background: rgba(66, 248, 255, .12);
-      box-shadow: 0 0 24px rgba(66, 248, 255, .18);
-    }
+    .panel-hidden { display: none; }
 
-    .portal-card {
-      transition: transform .3s ease, border-color .3s ease, background .3s ease;
-    }
-
-    .portal-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(66,248,255,.5);
-      background: linear-gradient(135deg, rgba(66,248,255,.09), rgba(255,79,216,.07));
-    }
-
-    .glow-button {
-      position: relative;
-      isolation: isolate;
-      overflow: hidden;
-      box-shadow: 0 0 28px rgba(66,248,255,.42), 0 0 80px rgba(255,79,216,.28), inset 0 0 18px rgba(255,255,255,.18);
-    }
-
-    .glow-button::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: -2;
-      background: linear-gradient(120deg, #42f8ff, #8b5cff, #ff4fd8, #42f8ff);
-      background-size: 250% 250%;
-      animation: buttonGradient 4s ease infinite;
-    }
-
-    @keyframes buttonGradient {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    .screen-mockup {
-      min-height: 320px;
-      background:
-        radial-gradient(circle at 30% 20%, rgba(66,248,255,.24), transparent 35%),
-        radial-gradient(circle at 80% 60%, rgba(255,79,216,.20), transparent 35%),
-        linear-gradient(135deg, #10142d, #070812);
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
     }
   </style>
 </head>
 
 <body>
-  <div class="aurora"></div>
-
-  <header class="sticky top-0 z-50 border-b border-white/10 bg-void/65 backdrop-blur-xl">
-    <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+  <header class="border-b border-white/10 bg-ink/65 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
       <a href="index.html" class="flex items-center gap-3">
-        <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/30 bg-white/10 shadow-neon">
-          <span class="h-3 w-3 rounded-full bg-neonCyan shadow-[0_0_18px_rgba(66,248,255,.9)]"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8 shadow-glow">
+          <span class="status-dot"></span>
         </span>
-        <span class="text-sm font-black uppercase tracking-[.28em] text-white">Eclipse Portal</span>
+        <div>
+          <p class="text-sm font-black uppercase tracking-[.26em] text-white">Eclipse Portal</p>
+          <p class="text-xs text-white/45">Game · Agent · Reports · Tetris</p>
+        </div>
       </a>
 
       <div class="hidden items-center gap-3 md:flex">
-        <button class="tab-button active rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/70" data-tab="game">Game</button>
-        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/70" data-tab="agent">Agent</button>
-        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/70" data-tab="diagnostics">Diagnostics</button>
-        <a href="tetris.html" class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/70 transition hover:border-neonPink/50 hover:bg-neonPink/10 hover:text-white">Tetris</a>
-        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/70" data-tab="downloads">Downloads</button>
-      </div>
-
-      <a href="downloads/System_Diagnostics_Agent.ps1" download="System_Diagnostics_Agent.ps1" class="hidden rounded-full border border-cyan-300/30 bg-cyan-300/10 px-5 py-2 text-sm font-bold text-neonCyan transition hover:bg-cyan-300/20 md:inline-flex">
-        Download Agent
-      </a>
-
-      <button id="mobileMenuButton" class="rounded-xl border border-white/10 bg-white/10 p-2 text-white md:hidden" aria-label="Open mobile menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 7H20M4 12H20M4 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
-      </button>
-    </nav>
-
-    <div id="mobileMenu" class="hidden border-t border-white/10 bg-void/95 px-5 py-4 md:hidden">
-      <div class="grid gap-3 text-sm font-semibold text-white/80">
-        <button class="tab-button active rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left" data-tab="game">Game</button>
-        <button class="tab-button rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left" data-tab="agent">Agent</button>
-        <button class="tab-button rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left" data-tab="diagnostics">Diagnostics</button>
-        <a href="tetris.html" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">Tetris</a>
-        <button class="tab-button rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left" data-tab="downloads">Downloads</button>
+        <a href="admin-reports.html" class="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold text-white/70 hover:border-cyan/40 hover:text-white">Admin Reports</a>
+        <a href="downloads/System_Diagnostics_Agent_Upload.ps1" download="System_Diagnostics_Agent_Upload.ps1" class="primary-button rounded-full px-5 py-2.5 text-sm font-black text-ink">Download Agent</a>
       </div>
     </div>
   </header>
 
-  <main class="px-5 py-14 lg:px-8">
-    <section class="mx-auto max-w-7xl">
-      <div class="premium-border rounded-[2rem] p-[1px]">
-        <div class="glass grid gap-10 rounded-[2rem] p-7 md:p-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
-          <div>
-            <p class="text-sm font-black uppercase tracking-[.35em] text-neonCyan">Game + Tools Portal</p>
-            <h1 class="mt-5 text-5xl font-black leading-[.95] tracking-tight sm:text-7xl lg:text-8xl">
-              Eclipse Vale
-              <span class="neon-text block">Control Hub</span>
-            </h1>
-            <p class="mt-7 max-w-3xl text-lg leading-8 text-white/65">
-              One neon portal for the game landing page, Windows diagnostics agent, browser diagnostics, download center,
-              and a retro Tetris mini-game.
-            </p>
-            <div class="mt-9 flex flex-col gap-4 sm:flex-row">
-              <a href="agent-report.html" class="glow-button inline-flex justify-center rounded-full px-8 py-4 text-sm font-black uppercase tracking-[.18em] text-white transition hover:scale-105 active:scale-95">
-                Open Agent Console
-              </a>
-              <a href="tetris.html" class="inline-flex justify-center rounded-full border border-white/15 bg-white/5 px-8 py-4 text-sm font-bold uppercase tracking-[.18em] text-white/80 transition hover:border-neonPink/50 hover:bg-neonPink/10 hover:text-white">
-                Play Tetris
-              </a>
-            </div>
-          </div>
-
-          <div class="screen-mockup relative overflow-hidden rounded-[2rem] border border-white/10 p-6 shadow-softGlow">
-            <div class="absolute right-8 top-8 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[.2em] text-neonCyan">Online</div>
-            <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/85 to-transparent"></div>
-            <div class="relative z-10 mt-28 max-w-md">
-              <div class="mb-5 h-2 w-28 rounded-full bg-neonCyan shadow-[0_0_24px_rgba(66,248,255,.8)]"></div>
-              <h2 class="text-3xl font-black">Portal Modules</h2>
-              <p class="mt-3 text-sm leading-6 text-white/60">Game landing, diagnostics dashboards, downloadable PowerShell agent, and Tetris are now separated into clear tabs.</p>
-            </div>
-          </div>
+  <main class="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+    <div class="layout grid gap-6 lg:grid-cols-[290px_1fr]">
+      <aside class="sidebar glass sticky top-6 h-[calc(100vh-3rem)] rounded-[2rem] p-5">
+        <div class="mb-6 rounded-3xl border border-white/10 bg-white/5 p-5">
+          <p class="text-xs font-black uppercase tracking-[.24em] text-white/40">Workspace</p>
+          <h2 class="mt-2 text-2xl font-black">Control Hub</h2>
+          <p class="mt-2 text-sm leading-6 text-white/55">Єдина панель для сайту, агента, звітів і mini-game.</p>
         </div>
-      </div>
-    </section>
 
-    <section class="mx-auto mt-10 max-w-7xl">
-      <div id="gameTab" class="tab-panel">
-        <div class="grid gap-6 lg:grid-cols-3">
-          <article class="portal-card glass rounded-[2rem] p-7 lg:col-span-2">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonPink">Game Landing</p>
-            <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Eclipse Vale: Neon Oath</h2>
-            <p class="mt-5 text-lg leading-8 text-white/65">
-              A cinematic dark neon indie game concept with cyber-fantasy visuals, relic combat, screenshots, lore, and system requirements.
-            </p>
-            <div class="mt-7 grid gap-4 sm:grid-cols-3">
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="text-2xl font-black">35+</p><p class="mt-1 text-xs uppercase tracking-[.2em] text-white/45">Relics</p></div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="text-2xl font-black">9</p><p class="mt-1 text-xs uppercase tracking-[.2em] text-white/45">Biomes</p></div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="text-2xl font-black">60 FPS</p><p class="mt-1 text-xs uppercase tracking-[.2em] text-white/45">Target</p></div>
+        <nav class="grid gap-3">
+          <button class="nav-item active-nav rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-bold text-white/75" data-panel="overview">Overview</button>
+          <button class="nav-item rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-bold text-white/65" data-panel="agent">Diagnostics Agent</button>
+          <button class="nav-item rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-bold text-white/65" data-panel="reports">Supabase Reports</button>
+          <button class="nav-item rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-bold text-white/65" data-panel="game">Game Landing</button>
+          <button class="nav-item rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-bold text-white/65" data-panel="downloads">Downloads</button>
+        </nav>
+
+        <div class="mt-6 rounded-3xl border border-mint/20 bg-mint/10 p-4 text-sm leading-6 text-mint">
+          <p class="font-black">Status: Online</p>
+          <p class="mt-1 text-mint/75">Vercel production build active.</p>
+        </div>
+      </aside>
+
+      <section class="min-w-0">
+        <div id="overviewPanel" class="panel">
+          <section class="glass overflow-hidden rounded-[2rem] p-7 md:p-10">
+            <div class="grid gap-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+              <div>
+                <p class="text-sm font-black uppercase tracking-[.35em] text-cyan">Premium dashboard</p>
+                <h1 class="mt-5 text-5xl font-black leading-[.95] tracking-tight sm:text-7xl">
+                  Cleaner portal for
+                  <span class="gradient-text block">tools & reports.</span>
+                </h1>
+                <p class="mt-7 max-w-3xl text-lg leading-8 text-white/62">
+                  Нова стилістика зроблена як нормальна адмін-панель: менше хаосу, більше структури, окремі модулі, швидкі переходи і чисті картки.
+                </p>
+                <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <a href="admin-reports.html" class="primary-button action-button rounded-full px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-ink">Open Reports</a>
+                  <a href="tetris.html" class="action-button rounded-full border border-white/10 bg-white/5 px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-white/75 hover:border-rose/40 hover:bg-rose/10 hover:text-white">Play Tetris</a>
+                </div>
+              </div>
+
+              <div class="rounded-[2rem] border border-white/10 bg-panelSoft/70 p-5 shadow-soft">
+                <div class="rounded-[1.5rem] border border-white/10 bg-ink/70 p-5">
+                  <div class="mb-5 flex items-center justify-between">
+                    <p class="text-xs font-black uppercase tracking-[.24em] text-white/40">System modules</p>
+                    <span class="rounded-full border border-mint/20 bg-mint/10 px-3 py-1 text-xs font-black text-mint">Ready</span>
+                  </div>
+                  <div class="grid gap-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><p class="font-black">Agent Upload</p><p class="mt-1 text-sm text-white/50">Visible diagnostics → Supabase.</p></div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><p class="font-black">Admin Reports</p><p class="mt-1 text-sm text-white/50">Dashboard with reports list.</p></div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4"><p class="font-black">Tetris</p><p class="mt-1 text-sm text-white/50">Separate mini-game page.</p></div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </article>
+          </section>
 
-          <article class="portal-card glass rounded-[2rem] p-7">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonCyan">Game Demo</p>
-            <h3 class="mt-4 text-2xl font-black">Launcher Placeholder</h3>
-            <p class="mt-4 text-sm leading-7 text-white/60">This is the safe demo file from the old Download Now button. It does not collect diagnostics.</p>
-            <a href="downloads/Game_Launcher.ps1" download="Game_Launcher.ps1" class="mt-6 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-neonCyan transition hover:bg-cyan-300/20">
-              Download Game Launcher
+          <section class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <a href="admin-reports.html" class="portal-card glass rounded-[2rem] p-6">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-cyan">Reports</p>
+              <h3 class="mt-3 text-2xl font-black">Admin Panel</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">Перегляд звітів із Supabase.</p>
             </a>
-          </article>
-        </div>
-      </div>
-
-      <div id="agentTab" class="tab-panel hidden">
-        <div class="grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
-          <article class="portal-card glass rounded-[2rem] p-7">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonCyan">Windows Agent</p>
-            <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">PC Report Console</h2>
-            <p class="mt-5 text-lg leading-8 text-white/65">
-              Downloads a consent-based PowerShell agent. The agent generates a local JSON report and opens the dashboard.
-            </p>
-            <div class="mt-7 flex flex-col gap-4 sm:flex-row">
-              <a href="agent-report.html" class="glow-button inline-flex justify-center rounded-full px-7 py-4 text-sm font-black uppercase tracking-[.16em] text-white transition hover:scale-105 active:scale-95">Open Console</a>
-              <a href="downloads/System_Diagnostics_Agent.ps1" download="System_Diagnostics_Agent.ps1" class="inline-flex justify-center rounded-full border border-white/15 bg-white/5 px-7 py-4 text-sm font-bold uppercase tracking-[.16em] text-white/80 transition hover:border-neonCyan/50 hover:bg-neonCyan/10 hover:text-white">Download Agent</a>
-            </div>
-          </article>
-
-          <article class="glass rounded-[2rem] p-7">
-            <h3 class="text-2xl font-black">Agent flow</h3>
-            <div class="mt-6 grid gap-4 sm:grid-cols-2">
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="font-black text-neonCyan">01 Download</p><p class="mt-2 text-sm text-white/60">Get System_Diagnostics_Agent.ps1.</p></div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="font-black text-neonCyan">02 Consent</p><p class="mt-2 text-sm text-white/60">Type I AGREE before collection.</p></div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="font-black text-neonCyan">03 Report</p><p class="mt-2 text-sm text-white/60">JSON is saved locally on Desktop.</p></div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5"><p class="font-black text-neonCyan">04 Dashboard</p><p class="mt-2 text-sm text-white/60">Open tabs: hardware, network, security.</p></div>
-            </div>
-          </article>
-        </div>
-      </div>
-
-      <div id="diagnosticsTab" class="tab-panel hidden">
-        <div class="grid gap-6 lg:grid-cols-2">
-          <article class="portal-card glass rounded-[2rem] p-7">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonViolet">Browser Diagnostics</p>
-            <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Browser-visible info</h2>
-            <p class="mt-5 text-lg leading-8 text-white/65">
-              Shows browser-visible IP/session/device hints after the user presses a button. No hidden collection.
-            </p>
-            <a href="diagnostics.html" class="mt-7 inline-flex rounded-full border border-violet-300/30 bg-violet-300/10 px-7 py-4 text-sm font-black uppercase tracking-[.16em] text-white transition hover:bg-violet-300/20">
-              Open Browser Diagnostics
+            <a href="agent-report.html" class="portal-card glass rounded-[2rem] p-6">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-accent">Local</p>
+              <h3 class="mt-3 text-2xl font-black">Agent Console</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">Локальний viewer для JSON-звіту.</p>
             </a>
-          </article>
-
-          <article class="glass rounded-[2rem] p-7">
-            <h3 class="text-2xl font-black">What it can show</h3>
-            <ul class="mt-5 list-disc space-y-3 pl-5 text-white/65">
-              <li>Public IP from Vercel request headers</li>
-              <li>Browser, language, platform, timezone</li>
-              <li>Screen size, viewport, pixel ratio</li>
-              <li>Approximate RAM/CPU hints if browser allows it</li>
-              <li>Connection hints if supported</li>
-            </ul>
-          </article>
+            <a href="diagnostics.html" class="portal-card glass rounded-[2rem] p-6">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-mint">Browser</p>
+              <h3 class="mt-3 text-2xl font-black">Diagnostics</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">IP, браузер, екран, timezone.</p>
+            </a>
+            <a href="tetris.html" class="portal-card glass rounded-[2rem] p-6">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-rose">Game</p>
+              <h3 class="mt-3 text-2xl font-black">Tetris</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">Окрема mini-game вкладка.</p>
+            </a>
+          </section>
         </div>
-      </div>
 
-      <div id="downloadsTab" class="tab-panel hidden">
-        <div class="grid gap-6 lg:grid-cols-3">
-          <article class="portal-card glass rounded-[2rem] p-7">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonCyan">Agent</p>
-            <h3 class="mt-4 text-2xl font-black">System Diagnostics Agent</h3>
-            <p class="mt-4 text-sm leading-7 text-white/60">Main diagnostics agent. Runs manually and asks for consent.</p>
-            <a href="downloads/System_Diagnostics_Agent.ps1" download="System_Diagnostics_Agent.ps1" class="mt-6 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-neonCyan transition hover:bg-cyan-300/20">Download</a>
-          </article>
-
-          <article class="portal-card glass rounded-[2rem] p-7">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonPink">Game</p>
-            <h3 class="mt-4 text-2xl font-black">Game Launcher Placeholder</h3>
-            <p class="mt-4 text-sm leading-7 text-white/60">Old safe demo launcher placeholder.</p>
-            <a href="downloads/Game_Launcher.ps1" download="Game_Launcher.ps1" class="mt-6 inline-flex rounded-full border border-pink-300/30 bg-pink-300/10 px-5 py-3 text-sm font-bold text-neonPink transition hover:bg-pink-300/20">Download</a>
-          </article>
-
-          <article class="portal-card glass rounded-[2rem] p-7">
-            <p class="text-sm font-black uppercase tracking-[.28em] text-neonViolet">Pages</p>
-            <h3 class="mt-4 text-2xl font-black">Tools</h3>
-            <div class="mt-6 grid gap-3">
-              <a href="agent-report.html" class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-white/75 transition hover:text-white">Agent Console</a>
-              <a href="diagnostics.html" class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-white/75 transition hover:text-white">Browser Diagnostics</a>
-              <a href="tetris.html" class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-white/75 transition hover:text-white">Tetris</a>
+        <div id="agentPanel" class="panel panel-hidden">
+          <section class="glass rounded-[2rem] p-7 md:p-10">
+            <p class="text-sm font-black uppercase tracking-[.35em] text-cyan">Diagnostics Agent</p>
+            <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Автоматична відправка звіту.</h2>
+            <p class="mt-5 max-w-3xl text-lg leading-8 text-white/62">
+              Новий агент після видимого підтвердження збирає технічний звіт, відправляє його у Vercel API, а далі звіт зберігається в Supabase.
+            </p>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href="downloads/System_Diagnostics_Agent_Upload.ps1" download="System_Diagnostics_Agent_Upload.ps1" class="primary-button action-button rounded-full px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-ink">Download Upload Agent</a>
+              <a href="admin-reports.html" class="action-button rounded-full border border-white/10 bg-white/5 px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-white/75 hover:border-cyan/40 hover:bg-cyan/10 hover:text-white">Open Admin Reports</a>
             </div>
-          </article>
+          </section>
+
+          <section class="mt-6 grid gap-6 md:grid-cols-3">
+            <div class="glass rounded-[2rem] p-6"><p class="text-3xl font-black text-cyan">01</p><h3 class="mt-3 text-xl font-black">Run</h3><p class="mt-2 text-sm leading-6 text-white/55">Користувач запускає агент.</p></div>
+            <div class="glass rounded-[2rem] p-6"><p class="text-3xl font-black text-cyan">02</p><h3 class="mt-3 text-xl font-black">Confirm</h3><p class="mt-2 text-sm leading-6 text-white/55">Вікно Yes / No перед збором.</p></div>
+            <div class="glass rounded-[2rem] p-6"><p class="text-3xl font-black text-cyan">03</p><h3 class="mt-3 text-xl font-black">Upload</h3><p class="mt-2 text-sm leading-6 text-white/55">Звіт летить у Supabase.</p></div>
+          </section>
         </div>
-      </div>
-    </section>
+
+        <div id="reportsPanel" class="panel panel-hidden">
+          <section class="glass rounded-[2rem] p-7 md:p-10">
+            <p class="text-sm font-black uppercase tracking-[.35em] text-mint">Supabase Reports</p>
+            <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Центральна адмінка.</h2>
+            <p class="mt-5 max-w-3xl text-lg leading-8 text-white/62">
+              Тут відкривається dashboard, де по admin key можна переглянути всі завантажені агентом звіти.
+            </p>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href="admin-reports.html" class="primary-button action-button rounded-full px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-ink">Open Admin Dashboard</a>
+              <a href="supabase-device-reports.sql" class="action-button rounded-full border border-white/10 bg-white/5 px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-white/75 hover:border-mint/40 hover:bg-mint/10 hover:text-white">Open SQL Schema</a>
+            </div>
+          </section>
+        </div>
+
+        <div id="gamePanel" class="panel panel-hidden">
+          <section class="glass rounded-[2rem] p-7 md:p-10">
+            <p class="text-sm font-black uppercase tracking-[.35em] text-rose">Game Area</p>
+            <h2 class="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Game landing + Tetris.</h2>
+            <p class="mt-5 max-w-3xl text-lg leading-8 text-white/62">
+              Ігрова частина тепер винесена окремо: placeholder launcher і Tetris mini-game.
+            </p>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href="tetris.html" class="primary-button action-button rounded-full px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-ink">Play Tetris</a>
+              <a href="downloads/Game_Launcher.ps1" download="Game_Launcher.ps1" class="action-button rounded-full border border-white/10 bg-white/5 px-7 py-4 text-center text-sm font-black uppercase tracking-[.16em] text-white/75 hover:border-rose/40 hover:bg-rose/10 hover:text-white">Download Game Launcher</a>
+            </div>
+          </section>
+        </div>
+
+        <div id="downloadsPanel" class="panel panel-hidden">
+          <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <a href="downloads/System_Diagnostics_Agent_Upload.ps1" download="System_Diagnostics_Agent_Upload.ps1" class="portal-card glass rounded-[2rem] p-7">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-cyan">Main</p>
+              <h3 class="mt-3 text-2xl font-black">Upload Agent</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">Відправляє звіт у Supabase.</p>
+            </a>
+            <a href="downloads/System_Diagnostics_Agent.ps1" download="System_Diagnostics_Agent.ps1" class="portal-card glass rounded-[2rem] p-7">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-accent">Local</p>
+              <h3 class="mt-3 text-2xl font-black">Local Agent</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">Створює JSON локально.</p>
+            </a>
+            <a href="downloads/Game_Launcher.ps1" download="Game_Launcher.ps1" class="portal-card glass rounded-[2rem] p-7">
+              <p class="text-xs font-black uppercase tracking-[.24em] text-rose">Game</p>
+              <h3 class="mt-3 text-2xl font-black">Game Launcher</h3>
+              <p class="mt-3 text-sm leading-6 text-white/55">Безпечна демо-заглушка.</p>
+            </a>
+          </section>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <footer class="border-t border-white/10 px-5 py-10 lg:px-8">
-    <div class="mx-auto flex max-w-7xl flex-col justify-between gap-6 text-sm text-white/55 md:flex-row md:items-center">
-      <div>
-        <p class="font-bold text-white">Eclipse Portal</p>
-        <p class="mt-1">Game landing, diagnostics tools, and Tetris mini-game.</p>
-      </div>
-      <div class="flex flex-wrap gap-4">
-        <a href="agent-report.html" class="transition hover:text-neonCyan">Agent Console</a>
-        <a href="diagnostics.html" class="transition hover:text-neonCyan">Diagnostics</a>
-        <a href="tetris.html" class="transition hover:text-neonCyan">Tetris</a>
-      </div>
-    </div>
-  </footer>
-
   <script>
-    const mobileMenuButton = document.getElementById("mobileMenuButton");
-    const mobileMenu = document.getElementById("mobileMenu");
+    const navButtons = document.querySelectorAll(".nav-item");
+    const panels = document.querySelectorAll(".panel");
 
-    mobileMenuButton.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
+    function openPanel(name) {
+      panels.forEach(panel => panel.classList.add("panel-hidden"));
+      document.getElementById(`${name}Panel`)?.classList.remove("panel-hidden");
 
-    function activateTab(tabName) {
-      document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.add("hidden"));
-      document.getElementById(`${tabName}Tab`)?.classList.remove("hidden");
-
-      document.querySelectorAll(".tab-button").forEach((button) => {
-        button.classList.toggle("active", button.dataset.tab === tabName);
+      navButtons.forEach(button => {
+        const active = button.dataset.panel === name;
+        button.classList.toggle("active-nav", active);
+        button.classList.toggle("bg-white/5", !active);
+        button.classList.toggle("text-white/65", !active);
       });
-
-      mobileMenu.classList.add("hidden");
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    document.querySelectorAll(".tab-button").forEach((button) => {
-      button.addEventListener("click", () => activateTab(button.dataset.tab));
+    navButtons.forEach(button => {
+      button.addEventListener("click", () => openPanel(button.dataset.panel));
     });
 
-    const initialTab = new URLSearchParams(location.search).get("tab");
-    if (["game", "agent", "diagnostics", "downloads"].includes(initialTab)) activateTab(initialTab);
+    const requestedPanel = new URLSearchParams(location.search).get("panel");
+    if (["overview", "agent", "reports", "game", "downloads"].includes(requestedPanel)) {
+      openPanel(requestedPanel);
+    }
   </script>
 </body>
 </html>
