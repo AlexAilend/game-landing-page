@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Report Dashboard | Eclipse Vale</title>
+  <meta name="description" content="Local diagnostics agent report viewer for Eclipse Vale." />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            void: "#050612",
+            neonCyan: "#42F8FF",
+            neonPink: "#FF4FD8",
+            neonViolet: "#8B5CFF"
+          },
+          boxShadow: {
+            neon: "0 0 25px rgba(66,248,255,.45), 0 0 70px rgba(255,79,216,.22)",
+            softGlow: "0 0 45px rgba(139,92,255,.25)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --neon-cyan: #42f8ff;
+      --neon-pink: #ff4fd8;
+      --neon-violet: #8b5cff;
+      --border-soft: rgba(255, 255, 255, 0.13);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: white;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255, 79, 216, .18), transparent 34%),
+        radial-gradient(circle at 85% 15%, rgba(66, 248, 255, .14), transparent 34%),
+        radial-gradient(circle at 50% 85%, rgba(139, 92, 255, .22), transparent 38%),
+        linear-gradient(135deg, #050612 0%, #080a1a 45%, #0c0616 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -5;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 58px 58px;
+      mask-image: linear-gradient(to bottom, black 0%, transparent 92%);
+    }
+
+    .aurora {
+      position: fixed;
+      inset: -20%;
+      z-index: -4;
+      pointer-events: none;
+      background: conic-gradient(from 120deg, transparent, rgba(66,248,255,.18), transparent, rgba(255,79,216,.16), transparent, rgba(139,92,255,.2), transparent);
+      filter: blur(85px);
+      animation: auroraFlow 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes auroraFlow {
+      from { transform: rotate(0deg) scale(1); opacity: .55; }
+      to { transform: rotate(18deg) scale(1.12); opacity: .9; }
+    }
+
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.035));
+      border: 1px solid var(--border-soft);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 24px 90px rgba(0,0,0,.38);
+    }
+
+    .neon-text {
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-violet));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .premium-border { position: relative; overflow: hidden; }
+
+    .premium-border::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      z-index: -1;
+      border-radius: inherit;
+      background: linear-gradient(120deg, rgba(66,248,255,.55), rgba(255,79,216,.45), rgba(139,92,255,.5), rgba(66,248,255,.55));
+      background-size: 260% 260%;
+      animation: borderShift 6s linear infinite;
+    }
+
+    @keyframes borderShift {
+      from { background-position: 0% 50%; }
+      to { background-position: 260% 50%; }
+    }
+
+    .glow-button {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      box-shadow: 0 0 28px rgba(66,248,255,.42), 0 0 80px rgba(255,79,216,.28), inset 0 0 18px rgba(255,255,255,.18);
+    }
+
+    .glow-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(120deg, #42f8ff, #8b5cff, #ff4fd8, #42f8ff);
+      background-size: 250% 250%;
+      animation: buttonGradient 4s ease infinite;
+    }
+
+    @keyframes buttonGradient {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .tab-button.active {
+      color: white;
+      border-color: rgba(66, 248, 255, .55);
+      background: rgba(66, 248, 255, .12);
+      box-shadow: 0 0 24px rgba(66, 248, 255, .18);
+    }
+
+    .metric-card {
+      transition: transform .25s ease, border-color .25s ease, background .25s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(66, 248, 255, .45);
+      background: linear-gradient(135deg, rgba(66,248,255,.08), rgba(255,79,216,.06));
+    }
+
+    pre { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+
+<body>
+  <div class="aurora"></div>
+
+  <header class="sticky top-0 z-50 border-b border-white/10 bg-void/65 backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+      <a href="index.html" class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/30 bg-white/10 shadow-neon">
+          <span class="h-3 w-3 rounded-full bg-neonCyan shadow-[0_0_18px_rgba(66,248,255,.9)]"></span>
+        </span>
+        <span class="text-sm font-black uppercase tracking-[.28em] text-white">Eclipse Vale</span>
+      </a>
+
+      <div class="flex items-center gap-4 text-sm font-bold text-white/70">
+        <a href="index.html" class="transition hover:text-neonCyan">Home</a>
+        <a href="diagnostics.html" class="transition hover:text-neonCyan">Browser Diagnostics</a>
+        <a href="downloads/System_Diagnostics_Agent.ps1" download="System_Diagnostics_Agent.ps1" class="rounded-full border border-cyan-300/30 bg-white/10 px-4 py-2 transition hover:border-neonCyan hover:bg-neonCyan/10 hover:text-white">Download Agent</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="px-5 py-14 lg:px-8">
+    <section class="mx-auto max-w-7xl">
+      <div class="premium-border rounded-[2rem] p-[1px]">
+        <div class="glass rounded-[2rem] p-7 md:p-10">
+          <p class="text-sm font-black uppercase tracking-[.35em] text-neonCyan">Windows Agent Dashboard</p>
+          <h1 class="mt-4 text-4xl font-black tracking-tight sm:text-6xl lg:text-7xl">
+            Full Local <span class="neon-text">PC Report</span>
+          </h1>
+          <p class="mt-6 max-w-4xl text-lg leading-8 text-white/65">
+            Use the downloadable PowerShell agent to generate a local JSON report, then view it here.
+            The page can also auto-load a report if the agent opens it through the URL hash.
+          </p>
+
+          <div class="mt-6 rounded-2xl border border-yellow-300/25 bg-yellow-300/10 p-5 text-sm leading-7 text-yellow-100">
+            <strong>Safety:</strong> this dashboard does not upload your report to a server. Reports are read in your browser.
+            Saved reports are stored only in localStorage on this device.
+          </div>
+
+          <div class="mt-8 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+            <label class="block">
+              <span class="mb-2 block text-sm font-bold uppercase tracking-[.18em] text-white/55">Load JSON report from agent</span>
+              <input id="fileInput" type="file" accept="application/json,.json" class="block w-full rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-white file:mr-4 file:rounded-full file:border-0 file:bg-cyan-300/15 file:px-4 file:py-2 file:font-bold file:text-neonCyan hover:border-cyan-300/40" />
+            </label>
+            <a href="downloads/System_Diagnostics_Agent.ps1" download="System_Diagnostics_Agent.ps1" class="glow-button inline-flex justify-center rounded-full px-7 py-4 text-sm font-black uppercase tracking-[.18em] text-white transition hover:scale-105 active:scale-95">
+              Download Agent
+            </a>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button id="saveReportButton" class="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white/70 transition hover:border-neonCyan/50 hover:bg-neonCyan/10 hover:text-white" disabled>Save Report Locally</button>
+            <button id="exportButton" class="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white/70 transition hover:border-neonPink/50 hover:bg-neonPink/10 hover:text-white" disabled>Export Current JSON</button>
+            <button id="clearButton" class="rounded-full border border-red-300/30 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-100 transition hover:bg-red-500/20">Clear Current</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto mt-8 max-w-7xl">
+      <div class="flex flex-wrap gap-3">
+        <button class="tab-button active rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70" data-tab="summary">Summary</button>
+        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70" data-tab="hardware">Hardware</button>
+        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70" data-tab="network">Network</button>
+        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70" data-tab="security">Security</button>
+        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70" data-tab="saved">Saved</button>
+        <button class="tab-button rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70" data-tab="raw">Raw JSON</button>
+      </div>
+    </section>
+
+    <section id="summaryTab" class="tab-panel mx-auto mt-8 max-w-7xl">
+      <div id="statusBox" class="glass rounded-[2rem] p-6 text-white/70">
+        Download and run the agent, or load a generated JSON report file.
+      </div>
+      <div id="summaryGrid" class="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4"></div>
+      <div id="summaryDetails" class="mt-6 grid gap-6 lg:grid-cols-2"></div>
+    </section>
+
+    <section id="hardwareTab" class="tab-panel mx-auto mt-8 hidden max-w-7xl">
+      <div id="hardwareDetails" class="grid gap-6 lg:grid-cols-2"></div>
+    </section>
+
+    <section id="networkTab" class="tab-panel mx-auto mt-8 hidden max-w-7xl">
+      <div id="networkDetails" class="grid gap-6 lg:grid-cols-2"></div>
+    </section>
+
+    <section id="securityTab" class="tab-panel mx-auto mt-8 hidden max-w-7xl">
+      <div id="securityDetails" class="grid gap-6 lg:grid-cols-2"></div>
+    </section>
+
+    <section id="savedTab" class="tab-panel mx-auto mt-8 hidden max-w-7xl">
+      <div class="glass rounded-[2rem] p-6">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 class="text-2xl font-black">Saved Local Agent Reports</h2>
+            <p class="mt-2 text-sm text-white/55">Stored only in this browser localStorage.</p>
+          </div>
+          <button id="clearSavedButton" class="rounded-full border border-red-300/30 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-100 transition hover:bg-red-500/20">Clear Saved</button>
+        </div>
+        <div id="savedReports" class="mt-6 grid gap-5 lg:grid-cols-2"></div>
+      </div>
+    </section>
+
+    <section id="rawTab" class="tab-panel mx-auto mt-8 hidden max-w-7xl">
+      <div class="glass rounded-[2rem] p-6">
+        <h2 class="text-2xl font-black">Raw JSON</h2>
+        <pre id="rawJson" class="mt-5 max-h-[650px] overflow-auto rounded-2xl border border-white/10 bg-black/35 p-5 text-xs leading-6 text-cyan-100">{}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "eclipse_vale_agent_reports";
+    let currentReport = null;
+
+    const fileInput = document.getElementById("fileInput");
+    const saveReportButton = document.getElementById("saveReportButton");
+    const exportButton = document.getElementById("exportButton");
+    const clearButton = document.getElementById("clearButton");
+    const clearSavedButton = document.getElementById("clearSavedButton");
+
+    const statusBox = document.getElementById("statusBox");
+    const summaryGrid = document.getElementById("summaryGrid");
+    const summaryDetails = document.getElementById("summaryDetails");
+    const hardwareDetails = document.getElementById("hardwareDetails");
+    const networkDetails = document.getElementById("networkDetails");
+    const securityDetails = document.getElementById("securityDetails");
+    const savedReports = document.getElementById("savedReports");
+    const rawJson = document.getElementById("rawJson");
+
+    function escapeHTML(value) {
+      return String(value ?? "Unknown")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatValue(value) {
+      if (Array.isArray(value)) return value.length ? value.join(", ") : "None";
+      if (typeof value === "object" && value !== null) return JSON.stringify(value);
+      return value ?? "Unknown";
+    }
+
+    function base64UrlDecode(text) {
+      const base64 = text.replaceAll("-", "+").replaceAll("_", "/") + "===".slice((text.length + 3) % 4);
+      const binary = atob(base64);
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+
+    function metric(label, value) {
+      return `
+        <div class="metric-card rounded-3xl border border-white/10 bg-white/5 p-5">
+          <p class="text-xs font-black uppercase tracking-[.22em] text-white/40">${escapeHTML(label)}</p>
+          <p class="mt-3 break-words text-xl font-black text-white">${escapeHTML(formatValue(value))}</p>
+        </div>
+      `;
+    }
+
+    function panel(title, rows) {
+      return `
+        <article class="glass rounded-[2rem] p-6">
+          <h2 class="text-2xl font-black">${escapeHTML(title)}</h2>
+          <div class="mt-5 space-y-3 text-sm leading-7 text-white/70">
+            ${rows.map(([key, value]) => `
+              <div class="flex flex-col justify-between gap-1 border-b border-white/10 pb-3 sm:flex-row">
+                <span class="text-white/45">${escapeHTML(key)}</span>
+                <span class="break-words text-white sm:max-w-[60%] sm:text-right">${escapeHTML(formatValue(value))}</span>
+              </div>
+            `).join("")}
+          </div>
+        </article>
+      `;
+    }
+
+    function listPanel(title, items, columns) {
+      if (!items || !items.length) {
+        return panel(title, [["Status", "No data"]]);
+      }
+
+      return `
+        <article class="glass rounded-[2rem] p-6 lg:col-span-2">
+          <h2 class="text-2xl font-black">${escapeHTML(title)}</h2>
+          <div class="mt-5 grid gap-4 lg:grid-cols-2">
+            ${items.map((item, index) => `
+              <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p class="text-xs font-black uppercase tracking-[.22em] text-neonCyan">Item ${index + 1}</p>
+                <div class="mt-4 space-y-2 text-sm text-white/70">
+                  ${columns.map(col => `
+                    <div class="border-b border-white/10 pb-2">
+                      <span class="block text-white/40">${escapeHTML(col)}</span>
+                      <span class="break-words text-white">${escapeHTML(formatValue(item[col]))}</span>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderReport(report) {
+      currentReport = report;
+
+      const os = report.operatingSystem || {};
+      const hw = report.hardware || {};
+      const sys = report.system || {};
+      const cpu = Array.isArray(report.processor) ? report.processor[0] || {} : {};
+      const network = report.network || {};
+      const meta = report.metadata || {};
+
+      summaryGrid.innerHTML = [
+        metric("Computer", sys.computerName),
+        metric("OS", os.caption),
+        metric("CPU", cpu.name),
+        metric("RAM", `${hw.totalMemoryGB ?? "Unknown"} GB`),
+        metric("Public IP", network.publicIp),
+        metric("GPU", report.graphics?.[0]?.Name || report.graphics?.[0]?.name || "Unknown"),
+        metric("Admin", sys.isAdministrator),
+        metric("Report ID", meta.reportId)
+      ].join("");
+
+      summaryDetails.innerHTML = [
+        panel("Report Metadata", Object.entries(meta)),
+        panel("System", Object.entries(sys)),
+        panel("Operating System", Object.entries(os)),
+        panel("Privacy Exclusions", (report.privacyExclusions || []).map((item, index) => [`Rule ${index + 1}`, item]))
+      ].join("");
+
+      hardwareDetails.innerHTML = [
+        panel("Hardware", Object.entries(hw)),
+        panel("Processor", Object.entries(cpu)),
+        listPanel("Memory Modules", report.memoryModules || [], ["CapacityGB", "SpeedMHz", "Manufacturer", "PartNumber", "FormFactor"]),
+        listPanel("Graphics", report.graphics || [], ["Name", "DriverVersion", "AdapterRAMGB", "VideoProcessor", "CurrentResolution"]),
+        listPanel("Disks", report.disks || [], ["DeviceID", "FileSystem", "SizeGB", "FreeSpaceGB", "UsedSpaceGB"])
+      ].join("");
+
+      networkDetails.innerHTML = [
+        panel("Network Summary", [["Public IP", network.publicIp]]),
+        listPanel("Network Adapters", network.adapters || [], ["Description", "DHCPEnabled", "IPAddress", "DefaultGateway", "DNSServers"])
+      ].join("");
+
+      const security = report.security || {};
+      securityDetails.innerHTML = [
+        listPanel("Antivirus", security.antivirus || [], ["displayName", "productState"]),
+        listPanel("Firewall Profiles", security.firewallProfiles || [], ["Name", "Enabled", "DefaultInboundAction", "DefaultOutboundAction"]),
+        listPanel("Latest Hotfixes", security.latestHotfixes || [], ["HotFixID", "Description", "InstalledOn"])
+      ].join("");
+
+      rawJson.textContent = JSON.stringify(report, null, 2);
+      statusBox.innerHTML = `Loaded report <strong class="text-white">${escapeHTML(meta.reportId || "without ID")}</strong> generated at <strong class="text-white">${escapeHTML(meta.generatedAtUtc || "Unknown")}</strong>.`;
+      saveReportButton.disabled = false;
+      exportButton.disabled = false;
+    }
+
+    function getSavedReports() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+      catch { return []; }
+    }
+
+    function setSavedReports(reports) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+    }
+
+    function renderSavedReports() {
+      const reports = getSavedReports();
+      if (!reports.length) {
+        savedReports.innerHTML = `<p class="rounded-2xl border border-white/10 bg-white/5 p-5 text-white/60">No saved reports yet.</p>`;
+        return;
+      }
+
+      savedReports.innerHTML = reports.map((report, index) => `
+        <article class="rounded-3xl border border-white/10 bg-white/5 p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-black">${escapeHTML(report.system?.computerName || "Unknown PC")}</h3>
+              <p class="mt-1 text-sm text-white/50">${escapeHTML(report.metadata?.generatedAtUtc || "Unknown time")}</p>
+            </div>
+            <button class="load-saved rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-xs font-bold text-neonCyan" data-index="${index}">Open</button>
+          </div>
+          <div class="mt-4 space-y-2 text-sm text-white/70">
+            <p><strong class="text-white">OS:</strong> ${escapeHTML(report.operatingSystem?.caption)}</p>
+            <p><strong class="text-white">CPU:</strong> ${escapeHTML(report.processor?.[0]?.name)}</p>
+            <p><strong class="text-white">RAM:</strong> ${escapeHTML(report.hardware?.totalMemoryGB)} GB</p>
+            <p><strong class="text-white">IP:</strong> ${escapeHTML(report.network?.publicIp)}</p>
+          </div>
+        </article>
+      `).join("");
+
+      document.querySelectorAll(".load-saved").forEach(button => {
+        button.addEventListener("click", () => {
+          const selected = getSavedReports()[Number(button.dataset.index)];
+          if (selected) renderReport(selected);
+          activateTab("summary");
+        });
+      });
+    }
+
+    function downloadJSON(report) {
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `agent-report-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function activateTab(tab) {
+      document.querySelectorAll(".tab-button").forEach(item => item.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
+      document.querySelector(`.tab-button[data-tab="${tab}"]`)?.classList.add("active");
+      document.getElementById(`${tab}Tab`)?.classList.remove("hidden");
+      if (tab === "saved") renderSavedReports();
+    }
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        renderReport(parsed);
+      } catch (error) {
+        statusBox.innerHTML = `<span class="text-red-200">Could not read report: ${escapeHTML(error.message)}</span>`;
+      }
+    });
+
+    saveReportButton.addEventListener("click", () => {
+      if (!currentReport) return;
+      const reports = getSavedReports();
+      reports.unshift(currentReport);
+      setSavedReports(reports.slice(0, 20));
+      renderSavedReports();
+      saveReportButton.textContent = "Saved";
+      setTimeout(() => saveReportButton.textContent = "Save Report Locally", 1200);
+    });
+
+    exportButton.addEventListener("click", () => {
+      if (currentReport) downloadJSON(currentReport);
+    });
+
+    clearButton.addEventListener("click", () => {
+      currentReport = null;
+      summaryGrid.innerHTML = "";
+      summaryDetails.innerHTML = "";
+      hardwareDetails.innerHTML = "";
+      networkDetails.innerHTML = "";
+      securityDetails.innerHTML = "";
+      rawJson.textContent = "{}";
+      saveReportButton.disabled = true;
+      exportButton.disabled = true;
+      statusBox.innerHTML = "Current report cleared. Load another JSON report or run the agent again.";
+    });
+
+    clearSavedButton.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      renderSavedReports();
+    });
+
+    document.querySelectorAll(".tab-button").forEach(button => {
+      button.addEventListener("click", () => activateTab(button.dataset.tab));
+    });
+
+    try {
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const encodedReport = hash.get("report");
+      if (encodedReport) {
+        const parsed = JSON.parse(base64UrlDecode(encodedReport));
+        renderReport(parsed);
+        history.replaceState(null, "", location.pathname);
+      }
+    } catch (error) {
+      statusBox.innerHTML = `<span class="text-red-200">Could not load report from URL hash: ${escapeHTML(error.message)}</span>`;
+    }
+
+    renderSavedReports();
+  </script>
+</body>
+</html>
