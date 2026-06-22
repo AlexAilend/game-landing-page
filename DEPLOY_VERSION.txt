@@ -1,0 +1,3 @@
+Eclipse Portal fresh deployment trigger.
+Version: portal-tabs-tetris
+Commit purpose: refresh Vercel production deployment.
