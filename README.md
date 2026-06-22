@@ -2,7 +2,7 @@
 
 A polished, cinematic, dark neon indie game landing page built with static HTML, Tailwind CSS CDN, custom CSS, and vanilla JavaScript.
 
-This project is ready for GitHub Pages.
+This project is ready for GitHub Pages and Vercel.
 
 ## Features
 
@@ -113,6 +113,17 @@ This website works on GitHub Pages because:
 - There are no build tools.
 - The download file is stored inside the repository.
 - Tailwind CSS is loaded through CDN.
+
+## Vercel Compatibility
+
+This project can be deployed on Vercel as a static HTML site.
+
+Recommended settings:
+
+- Framework Preset: Other
+- Build Command: empty
+- Output Directory: `.`
+- Install Command: empty
 
 ## Safety Note About the PowerShell File
 
